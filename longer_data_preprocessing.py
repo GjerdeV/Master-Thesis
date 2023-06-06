@@ -8,7 +8,7 @@ from detect_bad_chnl import detect_bad_channels
 from detect_bad_freqz import detect_bad_channels_freqz
 from interpolation import interpolate
 from epoching import epoch_signal
-from feature_extraction import featext
+from feature_extraction import featest
 
 # Defining sample frequency (one sample every 2ms)
 fs = 1/0.002
@@ -274,7 +274,7 @@ bad_epochs = np.array([668, 683, 827, 873])-1
 ############################ Bad epochs for anon5 ###############
 # bad_epochs = np.array([1, 41])-1
 ################ Align epochs with stimuli ######################
-Uninterest = np.array([1, 2, 3, 6, 9, 14, 15, 16, 28, 29, 
+Boredom = np.array([1, 2, 3, 6, 9, 14, 15, 16, 28, 29, 
                        42, 43, 46, 49, 50, 51, 52, 53, 54, 55, 58, 69, 72, 73, 87, 88, 90, 92, 95, 97, 
                        98, 105, 106, 107, 109, 112, 113, 114, 115, 116, 123, 124, 125, 126, 127, 128, 129, 144, 
                        152, 153, 154, 155, 156, 161, 162, 172, 173, 174, 175, 177, 178, 179, 180, 181, 182, 192, 193, 
@@ -327,8 +327,8 @@ Anger = np.array([227, 304, 380, 382, 383, 413, 414, 415, 416, 417, 418, 451, 45
 
 # Removing bad epochs from the stimuli response epochs
 for tall in bad_epochs:
-    if tall in Uninterest:
-        Uninterest = np.setdiff1d(Uninterest, bad_epochs)
+    if tall in Boredom:
+        Boredom = np.setdiff1d(Boredom, bad_epochs)
     if tall in Anger:
         Anger = np.setdiff1d(Anger, bad_epochs)
     if tall in Joy:
@@ -354,9 +354,16 @@ Negative.extend(Disgust)
 Negative.extend(Sadness)
 Negative.extend(Fear)
 Neutral = []
-Neutral.extend(Uninterest)
+Neutral.extend(Boredom)
 
-uninterest_epochs = []
+length_diff = len(Positive) - len(Negative)
+
+if length_diff > 0:  # list1 is longer, truncate it
+    Positive = Positive[:len(Negative)]
+elif length_diff < 0:  # list2 is longer, pad it
+    Negative = Negative[:len(Positive)]
+
+boredom_epochs = []
 anger_epochs = []
 joy_epochs = []
 admiration_epochs = []
@@ -365,8 +372,8 @@ disgust_epochs = []
 sadness_epochs = []
 fear_epochs = []
 
-for n in Uninterest:
-    uninterest_epochs.append(epochs[n].iloc[:,0].to_numpy())
+for n in Boredom:
+    boredom_epochs.append(epochs[n].iloc[:,0].to_numpy())
 for n in Anger:
     anger_epochs.append(epochs[n].iloc[:,0].to_numpy())
 for n in Joy:
@@ -394,46 +401,51 @@ for n in Negative:
     negative_epochs.append(epochs[n].iloc[:,0].to_numpy())
 
 # Extracting features for every epoch in their emotional context using the wavelet transformation
-uninterest_features = featext(uninterest_epochs)
-anger_features = featext(anger_epochs)
-joy_features = featext(joy_epochs)
-admiration_features = featext(admiration_epochs)
-arousal_features = featext(arousal_epochs)
-disgust_features = featext(disgust_epochs)
-sadness_features = featext(sadness_epochs)
-fear_features = featext(fear_epochs)
+boredom_features = featest(boredom_epochs)
+anger_features = featest(anger_epochs)
+joy_features = featest(joy_epochs)
+admiration_features = featest(admiration_epochs)
+arousal_features = featest(arousal_epochs)
+disgust_features = featest(disgust_epochs)
+sadness_features = featest(sadness_epochs)
+fear_features = featest(fear_epochs)
 
-positive_features = featext(positive_epochs)
-neutral_features = featext(neutral_epochs)
-negative_features = featext(negative_epochs)
+positive_features = featest(positive_epochs)
+neutral_features = featest(neutral_epochs)
+negative_features = featest(negative_epochs)
 ################### Storing data in new .npy-file ###########################
 # Create a dictionary to store the features for each class
-# features_dict = {
-#     'Uninterest': uninterest_features,
-#     'Anger': anger_features,
-#     'Joy': joy_features,
-#     'Admiration': admiration_features,
-#     'Arousal': arousal_features,
-#     'Disgust': disgust_features,
-#     'Sadness': sadness_features,
-#     'Fear': fear_features
-# }
+features_dict_8 = {
+    'Boredom': boredom_features,
+    'Anger': anger_features,
+    'Joy': joy_features,
+    'Admiration': admiration_features,
+    'Arousal': arousal_features,
+    'Disgust': disgust_features,
+    'Sadness': sadness_features,
+    'Fear': fear_features
+}
 
-features_dict = {
+features_dict_3 = {
     'Positive': positive_features,
     'Neutral': neutral_features,
     'Negative': negative_features
 }
 
+features_dict_2 = {
+    'Positive': positive_features,
+    'Negative': negative_features
+}
+
 # Save the features to a file
-np.save('3classlfeatures.npy', features_dict)
+np.save('l.npy', features_dict_8)
 
 
 ################# Add to existing data #######################
 # existing_data = np.load('3classfeatures.npy', allow_pickle=True).item()
 
 # # Update the existing data with more lists for each class
-# existing_data['Uninterest'].extend(uninterest_features)
+# existing_data['Boredom'].extend(boredom_features)
 # existing_data['Anger'].extend(anger_features)
 # existing_data['Joy'].extend(joy_features)
 # existing_data['Admiration'].extend(admiration_features)

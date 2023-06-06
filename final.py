@@ -50,7 +50,7 @@ window = 'hann'
 # All data:
 # df = pd.read_csv('eeg_data/001_anon_3.csv', sep=',', usecols=[1, *range(10,42)], skiprows=[*range(0,26), *range(27,45), *range(301015,301018)])
 # 300 000 sample data:
-df = pd.read_csv('eeg_data/001_anon_3.csv', sep=',', usecols=[1, *range(10,42)], skiprows=[*range(0,26), *range(27,45), *range(300045,301018)])
+# df = pd.read_csv('eeg_data/001_anon_3.csv', sep=',', usecols=[1, *range(10,42)], skiprows=[*range(0,26), *range(27,45), *range(300045,301018)])
 
 # Anon 4
 # All data:
@@ -62,7 +62,7 @@ df = pd.read_csv('eeg_data/001_anon_3.csv', sep=',', usecols=[1, *range(10,42)],
 # All data:
 # df = pd.read_csv('eeg_data/001_anon_5.csv', sep=',', usecols=[1, *range(10,42)], skiprows=[*range(0,26), *range(27,44), *range(301022,301026)])
 # 300 000 sample data:
-# df = pd.read_csv('eeg_data/001_anon_5.csv', sep=',', usecols=[1, *range(10,42)], skiprows=[*range(0,26), *range(27,44), *range(300044,301026)])
+df = pd.read_csv('eeg_data/001_anon_5.csv', sep=',', usecols=[1, *range(10,42)], skiprows=[*range(0,26), *range(27,44), *range(300044,301026)])
 
 df['Timestamp'] -= df['Timestamp'][0] # Setting time to start at 0
 df['Timestamp'] = df['Timestamp']/1000 # Converting time unit from ms to s
@@ -134,7 +134,7 @@ bad_channels = []
 # Anon 3, Threshold = 4.0
 # Anon 4, Threshold = 2.0
 # Anon 5, Threshold = 1.5
-bad_channels.extend(detect_bad_channels(bsl_eeg, threshold=4.0))
+bad_channels.extend(detect_bad_channels(bsl_eeg, threshold=1.5))
 
 ###### Automatic detection of bad channels based on PSD ######
 # Anon 1, Threshold = 2.0
@@ -142,7 +142,7 @@ bad_channels.extend(detect_bad_channels(bsl_eeg, threshold=4.0))
 # Anon 3, Threshold = 4.0
 # Anon 4, Threshold = 2.0
 # Anon 5, Threshold = 0.5
-bad_channels.extend(detect_bad_channels_freqz(bsl_eeg, fs, window, threshold=4.0))
+bad_channels.extend(detect_bad_channels_freqz(bsl_eeg, fs, window, threshold=0.5))
 
 # bad_channels = list(set(bad_channels)) # Removing any duplicates
 
@@ -444,13 +444,13 @@ plt.figure()
 #################################################################
 
 ################################ Bad epochs for anon3 ###########
-bad_epochs = np.array([1, 65, 66, 114])-1
+# bad_epochs = np.array([1, 65, 66, 114])-1
 ############################ Bad epochs for anon4 ###############
 # bad_epochs = np.array([31, 41, 81])-1
 ############################ Bad epochs for anon5 ###############
-# bad_epochs = np.array([1, 41])-1
+bad_epochs = np.array([1, 41])-1
 ################ Align epochs with stimuli ######################
-Uninterest = np.array([1, 2, 3, 5, 7, 9, 15, 17, 26, 27, 28, 29, 32, 33, 38, 40, 49, 50, 51, 53, 57, 61, 68, 72, 76, 77, 79, 82, 85, 86, 88, 90, 94, 96, 97, 98, 99, 100, 102, 106, 110, 113, 114, 117, 118, 120])-1
+Boredom = np.array([1, 2, 3, 5, 7, 9, 15, 17, 26, 27, 28, 29, 32, 33, 38, 40, 49, 50, 51, 53, 57, 61, 68, 72, 76, 77, 79, 82, 85, 86, 88, 90, 94, 96, 97, 98, 99, 100, 102, 106, 110, 113, 114, 117, 118, 120])-1
 Anger = np.array([30, 69, 70, 87])-1
 Joy = np.array([4, 12, 14, 18, 19, 20, 21, 23, 25, 35, 37, 39, 42, 43, 46, 48, 54, 59, 66, 67, 74, 80, 93, 105, 111, 116])-1
 Admiration = np.array([13, 22, 58, 63, 64, 119])-1
@@ -461,8 +461,8 @@ Fear = np.array([34, 62, 78, 107, 108])-1
 
 # Removing bad epochs from the stimuli epochs
 for tall in bad_epochs:
-    if tall in Uninterest:
-        Uninterest = np.setdiff1d(Uninterest, bad_epochs)
+    if tall in Boredom:
+        Boredom = np.setdiff1d(Boredom, bad_epochs)
     if tall in Anger:
         Anger = np.setdiff1d(Anger, bad_epochs)
     if tall in Joy:
@@ -488,14 +488,19 @@ Negative.extend(Disgust)
 Negative.extend(Sadness)
 Negative.extend(Fear)
 Neutral = []
-Neutral.extend(Uninterest)
+Neutral.extend(Boredom)
+Interest = []
+Interest.extend(Positive)
+Interest.extend(Negative)
 
-# all=[]
-# all.extend(Positive)
-# all.extend(Neutral)
-# all.extend(Negative)
+length_diff = len(Positive) - len(Negative)
 
-uninterest_epochs = []
+if length_diff > 0:  # list1 is longer, truncate it
+    Positive = Positive[:len(Negative)]
+elif length_diff < 0:  # list2 is longer, pad it
+    Negative = Negative[:len(Positive)]
+
+boredom_epochs = []
 anger_epochs = []
 joy_epochs = []
 admiration_epochs = []
@@ -508,8 +513,10 @@ positive_epochs = []
 neutral_epochs = []
 negative_epochs = []
 
-for n in Uninterest:
-    uninterest_epochs.append(epochs[n].iloc[:,0].to_numpy())
+interest_epochs = []
+
+for n in Boredom:
+    boredom_epochs.append(epochs[n].iloc[:,0].to_numpy())
 for n in Anger:
     anger_epochs.append(epochs[n].iloc[:,0].to_numpy())
 for n in Joy:
@@ -531,28 +538,33 @@ for n in Neutral:
     neutral_epochs.append(epochs[n].iloc[:,0].to_numpy())
 for n in Negative:
     negative_epochs.append(epochs[n].iloc[:,0].to_numpy())
+    
+for n in Interest:
+    interest_epochs.append(epochs[n].iloc[:,0].to_numpy())
 
 # Extracting features for every epoch in their emotional context:
-uninterest_features = featext(uninterest_epochs)
-anger_features = featext(anger_epochs)
-joy_features = featext(joy_epochs)
-admiration_features = featext(admiration_epochs)
-arousal_features = featext(arousal_epochs)
-disgust_features = featext(disgust_epochs)
-sadness_features = featext(sadness_epochs)
-fear_features = featext(fear_epochs)
+boredom_features = featest(boredom_epochs)
+anger_features = featest(anger_epochs)
+joy_features = featest(joy_epochs)
+admiration_features = featest(admiration_epochs)
+arousal_features = featest(arousal_epochs)
+disgust_features = featest(disgust_epochs)
+sadness_features = featest(sadness_epochs)
+fear_features = featest(fear_epochs)
 
 # Extracting features in positive/'neutral'/negative valence:
-positive_features = featext(positive_epochs)
-neutral_features = featext(neutral_epochs)
-negative_features = featext(negative_epochs)
+positive_features = featest(positive_epochs)
+neutral_features = featest(neutral_epochs)
+negative_features = featest(negative_epochs)
+
+interest_features = featest(interest_epochs)
 
 ################### Storing data in new .npy-file ###########################
 # Create a dictionary to store the features for each class
 
 # For all seperate emotions:
 features_dict_8 = {
-    'Uninterest': uninterest_features,
+    'Boredom': boredom_features,
     'Anger': anger_features,
     'Joy': joy_features,
     'Admiration': admiration_features,
@@ -574,27 +586,23 @@ features_dict_2 = {
     'Negative': negative_features
 }
 
-# Save the features to a file
-# np.save('anon3_ssqfeatures2.npy', features_dict_8)
-# np.save('anon3_ssqfeatures_32.npy', features_dict_3)
 
-# np.save('anon3varselect.npy', features_dict_8)
-# np.save('anon3varselect_3.npy', features_dict_3)
-np.save('anon3_2_eig.npy', features_dict_2)
 
-# np.save('testfeatures.npy', features_dict)
+features_dict_i = {
+    'Interest': interest_features,
+    'Boredom': boredom_features
+}
 
-# np.save('3classfeatures.npy', features_dict)
-# np.save('anon5_3class_features.npy', features_dict)
+np.save('ssqpca_anon5.npy', features_dict_8)
+
 
 ################# Add to existing data #######################
 # existing_data = np.load('features.npy', allow_pickle=True).item()
 
-# existing_data = np.load('3classfeatures.npy', allow_pickle=True).item()
 
 # Update the existing data with more lists for each class
 
-# existing_data['Uninterest'].extend(uninterest_features)
+# existing_data['Boredom'].extend(boredom_features)
 # existing_data['Anger'].extend(anger_features)
 # existing_data['Joy'].extend(joy_features)
 # existing_data['Admiration'].extend(admiration_features)
