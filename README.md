@@ -7,8 +7,8 @@ Make sure to set the correct values for bad channel detection and bad epoch reje
 
 Use final2.py for preprocessing smaller data using Zhang-fit algorithm for baselining.
 
-Use longer_data_preprocessing for preprocessing and extracting features for longer data sets, e.g. 2,25m samples
+Use longer_data_preprocessing for preprocessing and extracting features for longer data sets, e.g. 2.250.000 samples
 
-The file modeltraining is for the purpose of doing iterative model training and testing.
+The file model is for the purpose of doing iterative model training and testing.
 
-ml_LR.py, ml_NB.py, ml_RF.py, ml_SVM.py, ml_kNN.py and ml_nn.py are files for proposed methods for development of machine learning models.
+ml_LR.py, ml_NB.py, ml_RF.py, ml_SVM.py, ml_kNN.py and ml_nn.py are files for proposed methods for development of different machine learning models.
