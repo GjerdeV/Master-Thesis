@@ -3,9 +3,11 @@ from ssqueezepy import cwt, ssq_cwt
 from ssqueezepy.visuals import imshow
 from sklearn.decomposition import PCA
 from sklearn.feature_selection import VarianceThreshold
+from sklearn.preprocessing import StandardScaler
 from scipy.stats import kurtosis, skew
 sel = VarianceThreshold(threshold=(.8 * (1 - .8)))
 from scipy.linalg import lu, svd
+from pyeeg import hjorth
 
 
 # time        = np.arange(0, 10, 0.1)
@@ -17,7 +19,8 @@ def featext(data):
     for m in range(len(data)):
         sig = data[m]
         # sig = epochs[1].iloc[:,m].to_numpy()
-        Wx, _ = cwt(sig, 'morlet', t=t)
+        Wx, scales = cwt(sig, 'morlet', t=t)
+        # Wx, scales = ssq_cwt(sig, 'morlet', t=t)
         # feature_list.append(Wx)
         rms = np.sqrt(np.mean(sig**2, axis=-1))
         var = np.var(sig, axis=-1)
@@ -36,10 +39,29 @@ def featext(data):
         # e, v = np.linalg.eig(Wx)
         # e.real
         # v.real
-        U,_,_ = svd(Wx)
-        U.real
+        # U,_,_ = svd(Wx)
+        # U.real
+        Whist, _ = np.histogram(np.abs(Wx), scales)
         # feature = []
-        feature_list.append(U)
+        cdf = Whist.cumsum()
+        cdf_normalized = cdf * Whist.max() / cdf.max()
+    #     activity = np.var(sig)
+    #     mobility = np.sqrt(np.var(np.diff(sig))) / np.sqrt(activity)
+    #     complexity = (np.sqrt(np.var(np.diff(np.diff(sig)))) / mobility) / np.sqrt(activity)
+
+    # # Second-order Hjorth parameters
+    #     activity2 = activity
+    #     mobility2 = np.sqrt(np.var(np.diff(sig, 2))) / np.sqrt(activity2)
+    #     complexity2 = (np.sqrt(np.var(np.diff(np.diff(sig, 2)))) / mobility2) / np.sqrt(activity2)
+
+        # hjorth = [activity, mobility, complexity, activity2, mobility2, complexity2]
+        # print(np.abs(Wx[0]))
+        # hjorthf = hjorth(sig)
+        # print(hjorthf)
+        # print(cdf_normalized)
+        # feature_list.append(hjorthf)
+        feature_list.append(cdf_normalized)
+        print(feature_list)
     return feature_list
 
 def featest(data):
@@ -48,9 +70,12 @@ def featest(data):
     for m in range(len(data)):
         sig = data[m]
         Tx, *_ = ssq_cwt(sig, 'morlet', t=t)
-        pca = PCA(n_components=4)
-        pca.fit(np.abs(Tx))
-        feature_list.append(pca.singular_values_)
+        scaler = StandardScaler()
+        scaled_Tx = scaler.fit_transform(np.abs(Tx))
+        pca = PCA(n_components=24)
+        pca.fit_transform(scaled_Tx)
+        # print(pca.singular_values_)
+        feature_list.append(pca.components_)
         
     return feature_list
 
