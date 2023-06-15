@@ -15,7 +15,7 @@ ml_LR.py, ml_NB.py, ml_RF.py, ml_SVM.py, ml_kNN.py and ml_nn.py are files for pr
 
 ssqpcaNN .npy-files are the features extracted using synchrosqueezed wavelet transformation with PCA of 12 components. First N refers to the respondent number and the second N refers to the total number of classes. Respondent l is named l for large, which indicates the features extracted from one of the larger data sets.
 
-The data was put in a folder named 'eeg_data' for importing. The data collected during this thesis can be fetched from nextcloud - uploaded through link provided by thesis supervisor, Trygve Christian Eftestøl.
+The data was put in a folder named 'eeg_data' for importing. The data collected during this thesis can be fetched from the nextcloud-server on the unix-system at UiS - uploaded through link provided by thesis supervisor, Trygve Christian Eftestøl.
 
 Python version used in this project is Python 3.7.0
 The following versions of some of the different packages in pip are used for this project:
